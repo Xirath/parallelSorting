@@ -22,8 +22,8 @@ public class Main {
 		System.out.println("Cores: " + cores);
 		
 		// Fill the array with floats
-		//fillRandomFloats(original);
-		fillConsecutiveFloats(original);
+		fillRandomFloats(original);
+		//fillConsecutiveFloats(original);
 		
 		// Make a sorted control-list
 		control = original.clone();
@@ -107,9 +107,9 @@ public class Main {
 			if(timeForCurrentThreshold < recordTime){
 				recordTime = timeForCurrentThreshold;
 				recordThreshold = i;
-				System.out.print(" New Record: " + recordTime/100000 + " ms");
+				System.out.print(" New Record: " + recordTime/1000000 + " ms");
 			}else
-			System.out.print(" Time : " + timeForCurrentThreshold/100000 + " ms");
+			System.out.print(" Time : " + timeForCurrentThreshold/1000000 + " ms");
 		}
 		System.out.println("\n");
 		if(recordTime == Long.MAX_VALUE)
@@ -131,6 +131,8 @@ public class Main {
 	private static void fillConsecutiveFloats(Float[] list){
 		for(int i=0; i<list.length; i++){
 			list[i] = (float)i*1.0f;
+			if(i == 10000)
+				list[i] = 0f;
 		}
 	}
 
