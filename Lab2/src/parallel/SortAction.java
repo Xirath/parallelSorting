@@ -53,32 +53,12 @@ public class SortAction <T extends Comparable<? super T>> extends RecursiveActio
 	// WORKS now 
 	@Override
 	protected void compute() {
-		// We now have a small enough amount of elements to process immediately
-		// -1? sometime crashes? Arrays.sort not thread-safe?
+		// If intervall is less than threshold, sort immediately
 		if(high-low < THRESHOLD){
-			//System.out.println("Calculate immediatly: " + (high-low) + " elements" + " low: " + low + " high: " + high);
-			//System.out.println(list[low].toString() +" " + list[high]);
-			
-			/*
-			if(high-low == 1){
-				if(list[low].compareTo(list[high]) > 0){
-					T tmp = list[low];
-					list[low] = list[high];
-					list[high] = tmp;
-				}
-			}else{
-				*/
-			// THIS IS RETARDED!!! from is included too is excluded
-			//System.out.println("Before: " + printInterval(low, high));
-			//System.out.println("Sorting: " + low + " to " + high);
 			Arrays.sort(list, low, high+1);
-			//System.out.println("After: " + printInterval(low, high));
-			//}
 			return;
 		// Else split into smaller tasks
 		}else{
-			
-			
 			boolean test = true;
 			do{
 				int pivot = partition(list, low, high);
