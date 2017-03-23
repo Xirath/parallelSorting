@@ -52,7 +52,6 @@ public interface Strategy<T extends Comparable<T>> {
 			// Run parallel QuickSort
 			//if(isSorted(listToSort))
 			//	return;
-			//Collections.shuffle(Arrays.asList(listToSort));
 			SortAction<T> test = new SortAction<T>(listToSort, 0, listToSort.length-1, threshold);
 			pool.invoke(test);
 		}

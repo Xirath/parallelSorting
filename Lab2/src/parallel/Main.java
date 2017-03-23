@@ -6,51 +6,43 @@ import java.util.Random;
 
 public class Main {
 	
-	// Min dator är för svag för 10^8 tal... java.lang.OutOfMemoryError 10^7 klarar den av
-	// Totally killed my laptop by using all memory
-	static final int AMOUNT = 10000000;
-	// We throw away results from first run
-	static final int RUNS = 2;
+	// My laptop is to old/weak to sort 10^8 numbers, java.lang.OutOfMemoryError can handle 10^7 though
+	
+	// Nr of elements in array
+	static final int AMOUNT = 10000;
+	// Original list, sorted control and the listToSort
 	static Float[] original = new Float[AMOUNT];
 	static Float[] control = new Float[AMOUNT];
 	static Float[] listToSort = new Float[AMOUNT];
 	
 	public static void main(String[] args) {
 		
+		// TODO: implement some functions to vary the applied cores
 		int cores = Runtime.getRuntime().availableProcessors();
 		System.out.println("Cores: " + cores);
 		
-		//Float[] testar = {10f, 1f, 9f,4f,2f};
-		//Arrays.sort(testar, 0, 2);
-		//System.out.println(Arrays.toString(testar));
-		//getBestThreshold();
+		// Fill the array with floats
+		//fillRandomFloats(original);
+		fillConsecutiveFloats(original);
 		
-		fillRandomFloats(original);
-		//fillConsecutiveFloats(original);
+		// Make a sorted control-list
 		control = original.clone();
 		Arrays.sort(control);
-		//System.out.println(Arrays.toString(original));
 		
-		// Do not sort the list supplied, note that every number in intervall is 1*ElementsInList*Precision executions
-		// This quickly adds up, ex: 0-100 intervall is 100*100000(Elements)*10(10 Loops for every nr in intervall) = 100 Million
+		// Find the best threshold (Note: quickly adds up to alot of operations)
+		// After a while it seem constant regardless the threshold
+		//int threshold = 100;
+		int threshold = findBestThreshold(original, 100, 200, 15, 10);
+		System.out.println("Optimal threshold: " + threshold);
 		
-		int threshold = 10000;
-		//int threshold = findBestThreshold(original, 100, 200, 1);
-		//System.out.println("Optimal threshold: " + threshold);
-		
-		
-		System.out.println("Control == Original: " + Arrays.equals(control, original));
+		// Clone original to the array to be sorted
 		listToSort = original.clone();
-		
-		//Strategy<Float> s = new Strategy.ParallelQuickSortStrategy<>(0, 120);
-		//System.out.println("Average time is: " + getAverageTime(listToSort, s, 10)/1000000 + " ms");
 		
 		Strategy<Float> test;
 		test = new Strategy.ParallelQuickSortStrategy<>(0,threshold);
 		
-		
 		long sTime = System.nanoTime();
-		//test.execute(listToSort);
+		test.execute(listToSort);
 		long eTime = System.nanoTime();
 		
 		System.out.println("Correctly sorted: " + Arrays.equals(control, listToSort));
@@ -61,66 +53,13 @@ public class Main {
 		Arrays.parallelSort(listToSort);
 		eTime = System.nanoTime();
 		System.out.println("Operation took: " + (eTime-sTime)/1000000 + " ms");
-		/*
 		
-		
-		ForkJoinPool pool = new ForkJoinPool();
-	
-		ArrayList<Double> timeStamps = new ArrayList<>();
-		for(int i=0;i<RUNS;i++){
-			System.out.println("Run " + i);
-			listToSort = original.clone();
-			SortAction<Float> test = new SortAction<>(listToSort, 0, listToSort.length-1);
-			
-			System.gc();
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			long sTime = System.nanoTime();
-			
-			pool.invoke(test);
-			
-			long eTime = System.nanoTime();
-			double time = (eTime-sTime)/1000000;
-			if(i>=1)
-			timeStamps.add(time);
-			System.out.println("Took: " + time + " ms");
-			if(!Arrays.equals(control, listToSort)){
-				System.out.println("Sorting wrong");
-				//System.out.println(Arrays.toString(control));
-				//System.out.println(Arrays.toString(listToSort));
-			}
-		}
-		double sum = 0;
-		for(double time : timeStamps){
-			sum += time;
-		}
-		System.out.println("Average: " + sum/(RUNS-1));
-		
-		*/
 	}
-	
-	// My guess is that this will vary depending on the lists size
-	/*
-	private static int getBestThreshold(Float[] list){
-		int START = 100, END = 10000;
-		Strategy<Float> currentStraregy;
-		for(int i = START; i<END; i++){
-			currentStraregy = new Strategy.QuickSortStrategy<>();
-		}
-	}
-	*/
 	
 	public static long getTime(Float[] listToSort, Strategy<Float> s){
 		long sTime, eTime;
 		// So we don't actually sort the list
 		Float[] clone = listToSort.clone();
-		System.gc();
-		// System.gc & Thread.wait here severly impacts the time it takes to perform tests
-		// 50 ms for intervall of 100 and precision of 10 with 100 elements would give several days in 
-		// just thread.wait time...
 		sTime = System.nanoTime();
 		s.execute(clone);
 		eTime = System.nanoTime();
@@ -149,19 +88,30 @@ public class Main {
 	// around 110 - 120 seem to be correct for 100000 floats in a list
 	
 	// Tests and finds best threshold for list in intervall start to stop, precision(how many executions/test per threshold)
-	public static int findBestThreshold(Float[] list, int start, int stop, int precision){
+	public static int findBestThreshold(Float[] list, int start, int stop, int precision, int steps){
 		long recordTime = Long.MAX_VALUE;
 		int recordThreshold = start;
 		Strategy<Float> s;
 		
-		for(int i = start;i<stop;i++){
+		for(int i = start;i<=stop;i+=steps){
+			System.out.print("\nTesting threshold: " + i);
 			s = new Strategy.ParallelQuickSortStrategy<>(0,i);
+			System.gc();
+			try {
+				Thread.sleep(200);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			long timeForCurrentThreshold = getAverageTime(list, s, precision);
 			if(timeForCurrentThreshold < recordTime){
 				recordTime = timeForCurrentThreshold;
 				recordThreshold = i;
-			}
+				System.out.print(" New Record: " + recordTime/100000 + " ms");
+			}else
+			System.out.print(" Time : " + timeForCurrentThreshold/100000 + " ms");
 		}
+		System.out.println("\n");
 		if(recordTime == Long.MAX_VALUE)
 			System.out.println("Something went wrong");
 		
