@@ -9,7 +9,7 @@ public class Main {
 	// My laptop is to old/weak to sort 10^8 numbers, java.lang.OutOfMemoryError can handle 10^7 though
 	
 	// Nr of elements in array
-	static final int AMOUNT = 10000;
+	static final int AMOUNT = 100000;
 	// Original list, sorted control and the listToSort
 	static Float[] original = new Float[AMOUNT];
 	static Float[] control = new Float[AMOUNT];
@@ -32,15 +32,15 @@ public class Main {
 		// Find the best threshold (Note: quickly adds up to alot of operations)
 		// After a while it seem constant regardless the threshold
 		//int threshold = 100;
-		int threshold = findBestThreshold(original, 100, 200, 15, 10);
-		System.out.println("Optimal threshold: " + threshold);
+		//int threshold = findBestThreshold(original, 100, 200, 15, 10);
+		//System.out.println("Optimal threshold: " + threshold);
 		
 		// Clone original to the array to be sorted
 		listToSort = original.clone();
 		
 		Strategy<Float> test;
-		test = new Strategy.ParallelQuickSortStrategy<>(0,threshold);
-		
+		//test = new Strategy.ParallelQuickSortStrategy<>(0,threshold);
+		test = new Strategy.ParallelMergeSortStrategy<>(4, 1000);
 		long sTime = System.nanoTime();
 		test.execute(listToSort);
 		long eTime = System.nanoTime();
