@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
+
+import Classic.MergeSort;
 import Classic.quickSort;
 
 public interface Strategy<T extends Comparable<T>> {
@@ -21,6 +23,20 @@ public interface Strategy<T extends Comparable<T>> {
 		public void execute(T[] listToSort) {
 			// Run QuickSort
 			quickSort.sort(listToSort);
+		}
+		
+	}
+	
+	public class MergeSortStrategy<T extends Comparable<T>> implements Strategy<T>{
+		
+		private int threshold = 1000;
+		
+		public MergeSortStrategy() {}
+		
+		@Override
+		public void execute(T[] listToSort) {
+			// Run QuickSort
+			MergeSort.sort(listToSort);
 		}
 		
 	}
