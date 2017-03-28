@@ -10,7 +10,7 @@ public class Main {
 	// My laptop is to old/weak to sort 10^8 numbers, java.lang.OutOfMemoryError can handle 10^7 though
 	
 	// Nr of elements in array
-	static final int AMOUNT = 5000000;
+	static final int AMOUNT = 100000;
 	// Original list, sorted control and the listToSort
 	static Float[] original = new Float[AMOUNT];
 	static Float[] control = new Float[AMOUNT];
@@ -44,7 +44,6 @@ public class Main {
 		//System.out.println("Optimal threshold: " + threshold);
 		//threshold = findBestThreshold(original, 1000, 10000, 15, 1000);
 		//System.out.println("Optimal threshold: " + threshold);
-		
 		
 		// Clone original to the array to be sorted
 		listToSort = original.clone();
