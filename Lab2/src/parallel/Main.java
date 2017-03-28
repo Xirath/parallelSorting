@@ -1,5 +1,6 @@
 package parallel;
 
+import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
@@ -9,16 +10,18 @@ public class Main {
 	// My laptop is to old/weak to sort 10^8 numbers, java.lang.OutOfMemoryError can handle 10^7 though
 	
 	// Nr of elements in array
-	static final int AMOUNT = 10000;
+	static final int AMOUNT = 5000000;
 	// Original list, sorted control and the listToSort
 	static Float[] original = new Float[AMOUNT];
 	static Float[] control = new Float[AMOUNT];
 	static Float[] listToSort = new Float[AMOUNT];
 	
+	private static long sTime = 0, eTime = 0;
+	private final static int cores = Runtime.getRuntime().availableProcessors();
+	
 	public static void main(String[] args) {
 		
-		// TODO: implement some functions to vary the applied cores
-		int cores = Runtime.getRuntime().availableProcessors();
+		//int cores = Runtime.getRuntime().availableProcessors();
 		System.out.println("Cores: " + cores);
 		
 		// Fill the array with floats
@@ -32,21 +35,49 @@ public class Main {
 		// Find the best threshold (Note: quickly adds up to alot of operations)
 		// After a while it seem constant regardless the threshold
 		//int threshold = 100;
-		int threshold = findBestThreshold(original, 100, 200, 15, 10);
+		//Test with different thresholds
+		
+		// Parameters: IntervalStart, IntervalStop, TimesRunForAverage, Steps
+		int threshold = findBestThreshold(original, 10, 10, 20, 1);
 		System.out.println("Optimal threshold: " + threshold);
+		//threshold = findBestThreshold(original, 100, 1000, 15, 100);
+		//System.out.println("Optimal threshold: " + threshold);
+		//threshold = findBestThreshold(original, 1000, 10000, 15, 1000);
+		//System.out.println("Optimal threshold: " + threshold);
+		
 		
 		// Clone original to the array to be sorted
 		listToSort = original.clone();
 		
 		Strategy<Float> test;
-		test = new Strategy.ParallelQuickSortStrategy<>(0,threshold);
+		test = new Strategy.ParallelQuickSortStrategy<>(cores,threshold);
 		
-		long sTime = System.nanoTime();
+		sTime = System.nanoTime();
 		test.execute(listToSort);
-		long eTime = System.nanoTime();
+		eTime = System.nanoTime();
 		
 		System.out.println("Correctly sorted: " + Arrays.equals(control, listToSort));
 		System.out.println("Operation took: " + (eTime-sTime)/1000000 + " ms");
+		
+		
+		// Testing the time it takes with different amount af applied cores
+		/*
+		Strategy<Float> test;
+		for(int i = 1; i<=cores;i++){
+			listToSort = original.clone();
+			test = new Strategy.ParallelQuickSortStrategy<>(i);
+			System.gc();
+			try {
+				Thread.sleep(200);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			sTime = System.nanoTime();
+			test.execute(listToSort);
+			eTime = System.nanoTime();
+			System.out.println("Operation took ("+i+" cores)"+": " + (eTime-sTime)/1000000 + " ms");
+		}
+		*/
 		
 		listToSort = original.clone();
 		sTime = System.nanoTime();
@@ -69,17 +100,31 @@ public class Main {
 	public static long getAverageTime(Float[] listToSort, Strategy<Float> s, int times){
 		
 		ArrayList<Long> timeStamps = new ArrayList<>();
-		long timeSum = 0;
+		
 		// Just ignore first result
 		getTime(listToSort, s);
 		for(int i=0;i<times;i++){
 			timeStamps.add(getTime(listToSort,s));
 		}
 		
+		long timeSum = 0;
 		for(long ts : timeStamps){
-			//System.out.println("Control: " +  ts/1000000 + " ms");
 			timeSum += ts;
 		}
+		long average = timeSum/timeStamps.size();
+		long sum = 0;
+		for(long ts : timeStamps){
+			//System.out.println("\n" + ts/1000000);
+			sum += Math.pow(ts-average,2);
+		}
+		double SD = Math.sqrt(sum/timeStamps.size());
+		System.out.println("\n Average: " + average/1000000);
+		System.out.println("Standard diviation: " + SD/1000000 + " ms");
+		
+		double confidencecoefficient = 1.96; // 95%, have to get from z-table
+		double temp = confidencecoefficient*(SD/Math.sqrt(timeStamps.size()));
+		
+		System.out.println("Felmarginal: " + temp/1000000 + " ms");
 		
 		return timeSum/timeStamps.size();
 	}
@@ -95,12 +140,11 @@ public class Main {
 		
 		for(int i = start;i<=stop;i+=steps){
 			System.out.print("\nTesting threshold: " + i);
-			s = new Strategy.ParallelQuickSortStrategy<>(0,i);
+			s = new Strategy.ParallelQuickSortStrategy<>(cores,i);
 			System.gc();
 			try {
 				Thread.sleep(200);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			long timeForCurrentThreshold = getAverageTime(list, s, precision);
@@ -131,8 +175,6 @@ public class Main {
 	private static void fillConsecutiveFloats(Float[] list){
 		for(int i=0; i<list.length; i++){
 			list[i] = (float)i*1.0f;
-			if(i == 10000)
-				list[i] = 0f;
 		}
 	}
 

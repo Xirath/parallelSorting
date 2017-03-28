@@ -1,10 +1,7 @@
 package parallel;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.ForkJoinPool;
+
 import Classic.quickSort;
 
 public interface Strategy<T extends Comparable<T>> {
@@ -28,7 +25,7 @@ public interface Strategy<T extends Comparable<T>> {
 	public class ParallelQuickSortStrategy<T extends Comparable<T>> implements Strategy<T>{
 		
 		ForkJoinPool pool;
-		private int threshold = 1000;
+		private int threshold = 100;
 		
 		// Use default values
 		public ParallelQuickSortStrategy(){
@@ -37,21 +34,26 @@ public interface Strategy<T extends Comparable<T>> {
 		
 		// Use default Threshold but specified amount of cores
 		public ParallelQuickSortStrategy(int cores) {
-			// Set cores in pool?
-			pool = new ForkJoinPool();
+			if(cores > Runtime.getRuntime().availableProcessors() || cores < 2)
+				throw new IllegalArgumentException("Invalid amount of cores");
+			pool = new ForkJoinPool(cores);
 		}
 		
 		// Use specified ammounts of cores with a specific threshold
 		public ParallelQuickSortStrategy(int cores, int threshold){
+			if(cores > Runtime.getRuntime().availableProcessors() || cores < 2)
+				throw new IllegalArgumentException("Invalid amount of cores");
+			if(threshold < 0)
+				throw new IllegalArgumentException("Threshold needs to be a positive integer");
 			this.threshold = threshold;
-			pool = new ForkJoinPool();
+			pool = new ForkJoinPool(cores);
 		}
 		
 		@Override
 		public void execute(T[] listToSort) {
 			// Run parallel QuickSort
-			//if(isSorted(listToSort))
-			//	return;
+			if(isSorted(listToSort))
+				return;
 			SortAction<T> test = new SortAction<T>(listToSort, 0, listToSort.length-1, threshold);
 			pool.invoke(test);
 		}
