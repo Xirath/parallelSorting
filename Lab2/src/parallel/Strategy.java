@@ -12,8 +12,6 @@ public interface Strategy<T extends Comparable<T>> {
 	
 	public class QuickSortStrategy<T extends Comparable<T>> implements Strategy<T>{
 		
-		private int threshold = 1000;
-		
 		public QuickSortStrategy() {}
 		
 		@Override
@@ -26,13 +24,11 @@ public interface Strategy<T extends Comparable<T>> {
 	
 	public class MergeSortStrategy<T extends Comparable<T>> implements Strategy<T>{
 		
-		private int threshold = 1000;
-		
 		public MergeSortStrategy() {}
 		
 		@Override
 		public void execute(T[] listToSort) {
-			// Run QuickSort
+			// Run MergeSort
 			MergeSort.sort(listToSort);
 		}
 		
@@ -50,14 +46,14 @@ public interface Strategy<T extends Comparable<T>> {
 		
 		// Use default Threshold but specified amount of cores
 		public ParallelQuickSortStrategy(int cores) {
-			if(cores > Runtime.getRuntime().availableProcessors() || cores < 2)
+			if(cores > Runtime.getRuntime().availableProcessors() || cores < 1)
 				throw new IllegalArgumentException("Invalid amount of cores");
 			pool = new ForkJoinPool(cores);
 		}
 		
-		// Use specified ammounts of cores with a specific threshold
+		// Use specified amounts of cores with a specific threshold
 		public ParallelQuickSortStrategy(int cores, int threshold){
-			if(cores > Runtime.getRuntime().availableProcessors() || cores < 2)
+			if(cores > Runtime.getRuntime().availableProcessors() || cores < 1)
 				throw new IllegalArgumentException("Invalid amount of cores");
 			if(threshold < 0)
 				throw new IllegalArgumentException("Threshold needs to be a positive integer");
